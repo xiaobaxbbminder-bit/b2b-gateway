@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.b2b.oms.product</groupId>
-    <artifactId>b2bgw-openapi</artifactId>
+    <artifactId>b2b-gateway-openapi</artifactId>
     <version>1.0-SNAPSHOT</version>
 
 

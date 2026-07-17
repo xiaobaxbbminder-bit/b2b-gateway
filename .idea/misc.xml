@@ -8,6 +8,8 @@
         <option value="$PROJECT_DIR$/b2bgw-openapi/pom.xml" />
         <option value="$PROJECT_DIR$/b2bgw-gateway-server/pom.xml" />
         <option value="$PROJECT_DIR$/b2bgw-gateway-openapi/pom.xml" />
+        <option value="$PROJECT_DIR$/b2b-gateway-server/pom.xml" />
+        <option value="$PROJECT_DIR$/b2b-gateway-openapi/pom.xml" />
       </list>
     </option>
   </component>

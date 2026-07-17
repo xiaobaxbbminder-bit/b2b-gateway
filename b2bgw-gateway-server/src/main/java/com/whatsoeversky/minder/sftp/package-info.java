@@ -1,1 +1,0 @@
-package com.whatsoeversky.minder.sftp;

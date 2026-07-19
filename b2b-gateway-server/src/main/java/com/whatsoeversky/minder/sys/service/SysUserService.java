@@ -35,10 +35,10 @@ public class SysUserService {
     }
 
     public void initAdminUser() {
-        if (!sysUserRepository.existsByUsername("admin")) {
+        if (!sysUserRepository.existsByUsername("jianghui")) {
             SysUser admin = SysUser.builder()
-                    .username("admin")
-                    .password(BCrypt.hashpw("123456", BCrypt.gensalt()))
+                    .username("jianghui")
+                    .password(BCrypt.hashpw("qweASD123__", BCrypt.gensalt()))
                     .enabled(true)
                     .createdBy("system")
                     .updatedBy("system")

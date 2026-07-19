@@ -3,9 +3,9 @@ package com.whatsoeversky.minder.sftp.server.listener.handler;
 import com.whatsoeversky.minder.sftp.constants.SftpExecuteNodeConstants;
 import com.whatsoeversky.minder.sftp.entity.SftpServiceConfig;
 import com.whatsoeversky.minder.sftp.entity.SftpUser;
-import com.whatsoeversky.minder.sftp.repository.SftpServiceConfigRepository;
 import com.whatsoeversky.minder.sftp.enums.SftpOperationLogAction;
 import com.whatsoeversky.minder.sftp.enums.SftpOperationLogStatus;
+import com.whatsoeversky.minder.sftp.repository.SftpServiceConfigRepository;
 import com.whatsoeversky.minder.sftp.server.listener.handler.flow.PluginChain;
 import com.whatsoeversky.minder.sftp.server.storage.SftpStorage;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
@@ -76,11 +76,13 @@ public class CloseHandler extends CommonHandler {
             } else {
                 Path file = localHandle.getFile();
                 String description = String.format(Locale.ROOT, "文件：%s 上传成功", file.toString());
-                updateOperationLog(logId, SftpOperationLogAction.WRITE_FILE, SftpOperationLogStatus.SUCCESS, description);
                 SftpUser currentUser = sftpStorage.getCurrentUserInfo(getSessionId(session));
                 List<SftpServiceConfig> sftpServiceConfigList = sftpServiceConfigRepository.findByUserId(currentUser.getId());
                 if (!CollectionUtils.isEmpty(sftpServiceConfigList)) {
+                    updateOperationLog(logId, SftpOperationLogAction.WRITE_FILE, SftpOperationLogStatus.SUCCESS, description);
                     pluginChain.doPluginChain(fileRunContext, sftpServiceConfigList, SftpExecuteNodeConstants.AFTER_UPLOAD);
+                } else {
+                    updateOperationLog(logId, SftpOperationLogAction.WRITE_FILE, SftpOperationLogStatus.COMPLETED, description);
                 }
             }
         } finally {
@@ -111,9 +113,11 @@ public class CloseHandler extends CommonHandler {
                 SftpUser currentUser = sftpStorage.getCurrentUserInfo(getSessionId(session));
                 List<SftpServiceConfig> sftpServiceConfigList = sftpServiceConfigRepository.findByUserId(currentUser.getId());
                 if (!CollectionUtils.isEmpty(sftpServiceConfigList)) {
+                    updateOperationLog(logId, SftpOperationLogAction.READ_FILE, SftpOperationLogStatus.SUCCESS, description);
                     pluginChain.doPluginChain(fileRunContext, sftpServiceConfigList, SftpExecuteNodeConstants.AFTER_DOWNLOAD);
+                } else {
+                    updateOperationLog(logId, SftpOperationLogAction.READ_FILE, SftpOperationLogStatus.COMPLETED, description);
                 }
-                updateOperationLog(logId, SftpOperationLogAction.READ_FILE, SftpOperationLogStatus.SUCCESS, description);
             }
         } finally {
             sftpStorage.clearRemoteHandle(remoteHandle);

@@ -55,34 +55,6 @@ public class SftpOperationLogService {
         return insert.getId();
     }
 
-    public String saveOperationLog(String username,
-                                   String clientAddress,
-                                   String action,
-                                   String filePath,
-                                   Long fileSize,
-                                   String description) {
-        SftpOperationLog operationLog = SftpOperationLog.builder()
-                .action(action)
-                .filePath(filePath)
-                .username(username)
-                .clientAddress(clientAddress)
-                .startTime(LocalDateTime.now())
-                .status(SftpOperationLogStatus.PENDING.name())
-                .fileSize(fileSize)
-                .description(description)
-                .build();
-        SftpOperationLog insert = sftpOperationLogRepository.save(operationLog);
-        SftpOperationDetailLog detailLog = SftpOperationDetailLog.builder()
-                .logId(insert.getId())
-                .logTime(LocalDateTime.now())
-                .action(action)
-                .status(SftpOperationLogStatus.PENDING.name())
-                .description(description)
-                .build();
-        sftpOperationDetailLogRepository.save(detailLog);
-        return insert.getId();
-    }
-
     public void updateOperationLog(String logId, String action, String status, String description) {
         updateOperationLog(logId, action, status, description, null);
     }

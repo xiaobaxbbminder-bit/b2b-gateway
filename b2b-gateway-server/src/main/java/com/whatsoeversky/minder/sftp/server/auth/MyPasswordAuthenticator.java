@@ -6,6 +6,7 @@ import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
 import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogAction;
 import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogStatus;
+import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
 import com.whatsoeversky.minder.sftp.service.SftpOperationLogService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +31,7 @@ public class MyPasswordAuthenticator implements PasswordAuthenticator {
 
     @Override
     public boolean authenticate(String username, String password, ServerSession session) throws PasswordChangeRequiredException, AsyncAuthException {
-        String clientAddress = getClientAddress(session);
-
+        String clientAddress = SftpSessionUtils.getClientAddress(session);
         Optional<SftpUser> userOpt = sftpUserRepository.findByUsernameAndUserType(username, SftpUserTypeConstants.USER_TYPE_SERVER);
         if (userOpt.isEmpty()) {
             log.warn("Password authentication failed: user not found - {}", username);
@@ -77,13 +77,7 @@ public class MyPasswordAuthenticator implements PasswordAuthenticator {
         }
     }
 
-    private String getClientAddress(ServerSession session) {
-        try {
-            return session.getClientAddress().toString();
-        } catch (Exception e) {
-            return "unknown";
-        }
-    }
+
 
     private boolean verifyPassword(String rawPassword, String hashedPassword) {
         return BCrypt.checkpw(rawPassword, hashedPassword);

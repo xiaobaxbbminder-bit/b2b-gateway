@@ -3,6 +3,7 @@ package com.whatsoeversky.minder.sftp.server.utils;
 import com.whatsoeversky.minder.utils.HostUtils;
 import jakarta.annotation.Nullable;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.server.session.ServerSession;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -13,13 +14,12 @@ public class SftpSessionUtils {
         return Base64.getEncoder().encodeToString(session.getSessionId());
     }
 
-    @Nullable
-    public static String getRemoteHostname(Session session) {
-        SocketAddress remoteAddress = session.getRemoteAddress();
-        if (remoteAddress instanceof InetSocketAddress inetSocketAddress) {
-            return HostUtils.getHostname(inetSocketAddress);
+    public static String getClientAddress(ServerSession session) {
+        try {
+            return session.getClientAddress().toString();
+        } catch (Exception e) {
+            return "unknown";
         }
-        return null;
     }
 
 

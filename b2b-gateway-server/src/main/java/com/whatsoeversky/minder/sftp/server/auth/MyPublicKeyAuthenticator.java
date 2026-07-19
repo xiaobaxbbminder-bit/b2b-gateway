@@ -6,6 +6,7 @@ import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
 import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogAction;
 import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogStatus;
+import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
 import com.whatsoeversky.minder.sftp.service.SftpOperationLogService;
 import com.whatsoeversky.minder.utils.SSHDKeyUtils;
 import jakarta.annotation.Resource;
@@ -29,7 +30,7 @@ public class MyPublicKeyAuthenticator implements PublickeyAuthenticator {
 
     @Override
     public boolean authenticate(String username, PublicKey key, ServerSession session) throws AsyncAuthException {
-        String clientAddress = getClientAddress(session);
+        String clientAddress = SftpSessionUtils.getClientAddress(session);
 
         Optional<SftpUser> userOpt = sftpUserRepository.findByUsernameAndUserType(username, SftpUserTypeConstants.USER_TYPE_SERVER);
         if (userOpt.isEmpty()) {
@@ -81,14 +82,6 @@ public class MyPublicKeyAuthenticator implements PublickeyAuthenticator {
             sftpOperationLogService.saveOperationLog(reqDto);
         } catch (Exception e) {
             log.error("Failed to save auth log", e);
-        }
-    }
-
-    private String getClientAddress(ServerSession session) {
-        try {
-            return session.getClientAddress().toString();
-        } catch (Exception e) {
-            return "unknown";
         }
     }
 }

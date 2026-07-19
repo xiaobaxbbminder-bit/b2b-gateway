@@ -73,15 +73,14 @@ public class PluginChain {
         List<SftpServiceConfig.PluginConfig> execPlugins = config.getPlugins().stream()
                 .filter(p -> Boolean.TRUE.equals(p.getEnabled()) && execNode.equals(p.getExecNode()))
                 .toList();
-        boolean hasError = false;
-        for (SftpServiceConfig.PluginConfig pluginConfig : execPlugins) {
+        for (int i = 0; i < execPlugins.size(); i++) {
+            SftpServiceConfig.PluginConfig pluginConfig = execPlugins.get(i);
             Plugin plugin = pluginMap.get(pluginConfig.getName());
             if (plugin == null) {
                 log.warn("plugin not found: {}", pluginConfig.getName());
                 if (logId != null) {
                     sftpOperationLogService.updateOperationLog(logId, pluginConfig.getName().toUpperCase(Locale.ROOT), SftpOperationLogStatus.ERROR.name(), "插件未找到: " + pluginConfig.getName());
                 }
-                hasError = true;
                 break;
             }
             String pluginName = plugin.getPluginName();
@@ -94,8 +93,10 @@ public class PluginChain {
                 String argsJson = objectMapper.writeValueAsString(pluginConfig.getArgs());
                 plugin.execute(fileRunContext, argsJson);
                 if (logId != null) {
+                    boolean isLast = (i == execPlugins.size() - 1);
                     String ctxJson = toJson(fileRunContext.getContextVariables());
-                    sftpOperationLogService.updateOperationLog(logId, pluginName.toUpperCase(Locale.ROOT), SftpOperationLogStatus.SUCCESS.name(), "插件执行成功: " + pluginName, ctxJson);
+                    SftpOperationLogStatus status = isLast ? SftpOperationLogStatus.COMPLETED : SftpOperationLogStatus.SUCCESS;
+                    sftpOperationLogService.updateOperationLog(logId, pluginName.toUpperCase(Locale.ROOT), status.name(), "插件执行成功: " + pluginName, ctxJson);
                 }
             } catch (Exception e) {
                 log.error("plugin execute error: {}", pluginName, e);
@@ -103,12 +104,8 @@ public class PluginChain {
                     String ctxJson = toJson(fileRunContext.getContextVariables());
                     sftpOperationLogService.updateOperationLog(logId, pluginName.toUpperCase(Locale.ROOT), SftpOperationLogStatus.ERROR.name(), "插件执行失败: " + e.getMessage(), ctxJson);
                 }
-                hasError = true;
                 break;
             }
-        }
-        if (!hasError && logId != null) {
-            sftpOperationLogService.updateOperationLog(logId, null, SftpOperationLogStatus.COMPLETED.name(), "插件链执行完成");
         }
     }
 

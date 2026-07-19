@@ -2,3 +2,4 @@
 **/node_modules/
 **/.mvn/
 b2b-gateway-server/src/main/resources/static/assets/
+b2b-gateway-server/src/main/resources/static/

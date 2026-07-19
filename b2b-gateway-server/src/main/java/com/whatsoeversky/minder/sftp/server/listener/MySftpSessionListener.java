@@ -5,6 +5,7 @@ import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
 import com.whatsoeversky.minder.sftp.server.storage.SftpStorage;
 import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
+import com.whatsoeversky.minder.sftp.service.SftpOperationLogService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.sshd.common.session.Session;
@@ -20,6 +21,8 @@ public class MySftpSessionListener implements SessionListener {
     private SftpStorage sftpStorage;
     @Resource
     private SftpUserRepository sftpUserRepository;
+    @Resource
+    private SftpOperationLogService sftpOperationLogService;
 
     @Override
     public void sessionEvent(Session session, Event event) {

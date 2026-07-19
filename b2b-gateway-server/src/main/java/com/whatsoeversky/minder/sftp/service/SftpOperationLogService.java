@@ -1,5 +1,6 @@
 package com.whatsoeversky.minder.sftp.service;
 
+import com.whatsoeversky.minder.sftp.dto.SftpOperationLogSaveReqDto;
 import com.whatsoeversky.minder.sftp.entity.SftpOperationDetailLog;
 import com.whatsoeversky.minder.sftp.entity.SftpOperationLog;
 import com.whatsoeversky.minder.sftp.repository.SftpOperationDetailLogRepository;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -28,7 +30,37 @@ public class SftpOperationLogService {
     @Resource
     private MongoTemplate mongoTemplate;
 
-    public String saveOperationLog(String username, String clientAddress, String action, String filePath, Long fileSize, String description) {
+    public String saveOperationLog(SftpOperationLogSaveReqDto reqDto) {
+        SftpOperationLog operationLog = SftpOperationLog.builder()
+                .action(reqDto.getAction())
+                .filePath(reqDto.getFilePath())
+                .username(reqDto.getUsername())
+                .clientAddress(reqDto.getClientAddress())
+                .startTime(LocalDateTime.now())
+                .status(StringUtils.hasLength(reqDto.getStatus()) ?
+                        reqDto.getStatus() : SftpOperationLogStatus.PENDING.name())
+                .fileSize(reqDto.getFileSize())
+                .description(reqDto.getDescription())
+                .build();
+        SftpOperationLog insert = sftpOperationLogRepository.save(operationLog);
+        SftpOperationDetailLog detailLog = SftpOperationDetailLog.builder()
+                .logId(insert.getId())
+                .logTime(LocalDateTime.now())
+                .action(reqDto.getAction())
+                .status(StringUtils.hasLength(reqDto.getStatus()) ?
+                        reqDto.getStatus() : SftpOperationLogStatus.PENDING.name())
+                .description(reqDto.getDescription())
+                .build();
+        sftpOperationDetailLogRepository.save(detailLog);
+        return insert.getId();
+    }
+
+    public String saveOperationLog(String username,
+                                   String clientAddress,
+                                   String action,
+                                   String filePath,
+                                   Long fileSize,
+                                   String description) {
         SftpOperationLog operationLog = SftpOperationLog.builder()
                 .action(action)
                 .filePath(filePath)

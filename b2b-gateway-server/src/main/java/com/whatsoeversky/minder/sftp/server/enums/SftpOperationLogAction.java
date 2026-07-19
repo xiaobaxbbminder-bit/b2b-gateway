@@ -6,5 +6,6 @@ public enum SftpOperationLogAction {
     DELETE_FILE,
     CREATE_DIRECTORY,
     REMOVE_DIRECTORY,
+    LOGIN,
 }
 

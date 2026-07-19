@@ -1,0 +1,1 @@
+import{_ as s,c as t,d as o,w as l,b as n,r as c,o as r,e as _,O as d}from"./index-C6pmDGnK.js";const p={class:"placeholder"},i={__name:"Placeholder",setup(f){return(u,e)=>{const a=c("el-icon");return r(),t("div",p,[o(a,{size:48},{default:l(()=>[o(_(d))]),_:1}),e[0]||(e[0]=n("h3",null,"功能开发中，敬请期待",-1))])}}},h=s(i,[["__scopeId","data-v-92555ef2"]]);export{h as default};

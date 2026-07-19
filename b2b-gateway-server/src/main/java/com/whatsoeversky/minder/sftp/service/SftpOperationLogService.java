@@ -5,7 +5,7 @@ import com.whatsoeversky.minder.sftp.entity.SftpOperationDetailLog;
 import com.whatsoeversky.minder.sftp.entity.SftpOperationLog;
 import com.whatsoeversky.minder.sftp.repository.SftpOperationDetailLogRepository;
 import com.whatsoeversky.minder.sftp.repository.SftpOperationLogRepository;
-import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogStatus;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogStatus;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;

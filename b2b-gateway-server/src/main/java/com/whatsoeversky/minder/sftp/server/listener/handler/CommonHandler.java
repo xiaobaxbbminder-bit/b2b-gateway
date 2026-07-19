@@ -1,8 +1,8 @@
 package com.whatsoeversky.minder.sftp.server.listener.handler;
 
 import com.whatsoeversky.minder.sftp.dto.SftpOperationLogSaveReqDto;
-import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogAction;
-import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogStatus;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogAction;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogStatus;
 import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
 import com.whatsoeversky.minder.sftp.service.SftpOperationLogService;
 import jakarta.annotation.Resource;

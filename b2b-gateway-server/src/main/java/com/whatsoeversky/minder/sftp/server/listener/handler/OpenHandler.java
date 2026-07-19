@@ -1,6 +1,6 @@
 package com.whatsoeversky.minder.sftp.server.listener.handler;
 
-import com.whatsoeversky.minder.sftp.server.enums.SftpOperationLogAction;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogAction;
 import com.whatsoeversky.minder.sftp.server.storage.SftpStorage;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
 import com.whatsoeversky.minder.utils.FileUtils;

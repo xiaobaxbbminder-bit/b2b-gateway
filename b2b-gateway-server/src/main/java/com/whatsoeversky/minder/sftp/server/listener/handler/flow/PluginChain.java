@@ -2,6 +2,7 @@ package com.whatsoeversky.minder.sftp.server.listener.handler.flow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsoeversky.minder.sftp.entity.SftpServiceConfig;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogStatus;
 import com.whatsoeversky.minder.sftp.plugins.Plugin;
 import com.whatsoeversky.minder.sftp.service.SftpOperationLogService;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
@@ -76,7 +77,7 @@ public class PluginChain {
             if (plugin == null) {
                 log.warn("plugin not found: {}", pluginConfig.getName());
                 if (logId != null) {
-                    sftpOperationLogService.updateOperationLog(logId, pluginConfig.getName(), "ERROR", "插件未找到: " + pluginConfig.getName());
+                    sftpOperationLogService.updateOperationLog(logId, pluginConfig.getName(), SftpOperationLogStatus.ERROR.name(), "插件未找到: " + pluginConfig.getName());
                 }
                 break;
             }
@@ -84,20 +85,20 @@ public class PluginChain {
             Map<String, Object> ctxBefore = new HashMap<>(fileRunContext.getContextVariables());
             if (logId != null) {
                 String ctxJson = toJson(ctxBefore);
-                sftpOperationLogService.updateOperationLog(logId, pluginName, "PENDING", "开始执行插件: " + pluginName, ctxJson);
+                sftpOperationLogService.updateOperationLog(logId, pluginName, SftpOperationLogStatus.PENDING.name(), "开始执行插件: " + pluginName, ctxJson);
             }
             try {
                 String argsJson = objectMapper.writeValueAsString(pluginConfig.getArgs());
                 plugin.execute(fileRunContext, argsJson);
                 if (logId != null) {
                     String ctxJson = toJson(fileRunContext.getContextVariables());
-                    sftpOperationLogService.updateOperationLog(logId, pluginName, "SUCCESS", "插件执行成功: " + pluginName, ctxJson);
+                    sftpOperationLogService.updateOperationLog(logId, pluginName, SftpOperationLogStatus.SUCCESS.name(), "插件执行成功: " + pluginName, ctxJson);
                 }
             } catch (Exception e) {
                 log.error("plugin execute error: {}", pluginName, e);
                 if (logId != null) {
                     String ctxJson = toJson(fileRunContext.getContextVariables());
-                    sftpOperationLogService.updateOperationLog(logId, pluginName, "ERROR", "插件执行失败: " + e.getMessage(), ctxJson);
+                    sftpOperationLogService.updateOperationLog(logId, pluginName, SftpOperationLogStatus.ERROR.name(), "插件执行失败: " + e.getMessage(), ctxJson);
                 }
                 break;
             }

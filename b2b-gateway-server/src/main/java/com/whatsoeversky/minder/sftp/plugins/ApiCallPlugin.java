@@ -1,17 +1,13 @@
 package com.whatsoeversky.minder.sftp.plugins;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alibaba.fastjson.JSON;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
 import com.whatsoeversky.minder.utils.HttpClientUtils;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -25,10 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 public class ApiCallPlugin implements Plugin {
-
-    @Resource
-    private ObjectMapper objectMapper;
-
     @Override
     public String getPluginName() {
         return "api_call";
@@ -36,7 +28,7 @@ public class ApiCallPlugin implements Plugin {
 
     @Override
     public void execute(FileRunContext context, String args) throws IOException {
-        ApiCallArg arg = objectMapper.readValue(args, ApiCallArg.class);
+        ApiCallArg arg = JSON.parseObject(args, ApiCallArg.class);
         FileRunContext.ExpressionParser expressionParser = context.getExpressionParser();
         String body = expressionParser.parseExpression(arg.getBody());
         Map<String, String> headerMap = arg.getHeaders();

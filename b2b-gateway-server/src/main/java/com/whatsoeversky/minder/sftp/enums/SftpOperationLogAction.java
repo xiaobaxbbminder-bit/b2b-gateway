@@ -1,4 +1,4 @@
-package com.whatsoeversky.minder.sftp.server.enums;
+package com.whatsoeversky.minder.sftp.enums;
 
 public enum SftpOperationLogAction {
     READ_FILE,

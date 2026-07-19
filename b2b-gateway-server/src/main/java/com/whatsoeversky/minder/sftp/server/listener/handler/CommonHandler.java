@@ -31,6 +31,7 @@ public class CommonHandler {
         reqDto.setFileSize(fileSize);
         reqDto.setAction(action);
         reqDto.setDescription(description);
+        reqDto.setSessionId(SftpSessionUtils.getSessionId(session));
         return sftpOperationLogService.saveOperationLog(reqDto);
     }
 

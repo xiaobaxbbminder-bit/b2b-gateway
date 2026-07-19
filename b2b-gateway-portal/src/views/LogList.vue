@@ -8,6 +8,7 @@
       </template>
 
       <el-table :data="logs" style="width: 100%" v-loading="loading">
+        <el-table-column prop="sessionId" label="会话ID" width="140" show-overflow-tooltip />
         <el-table-column prop="username" label="用户名" width="120" show-overflow-tooltip />
         <el-table-column prop="filePath" label="文件路径" min-width="200" show-overflow-tooltip />
         <el-table-column prop="action" label="操作类型" width="120" show-overflow-tooltip />

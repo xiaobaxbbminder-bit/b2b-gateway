@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class SftpOperationLogSaveReqDto {
+    private String sessionId;
     private String username;
     private String clientAddress;
     private String filePath;

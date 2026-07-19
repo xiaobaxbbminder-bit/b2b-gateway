@@ -49,7 +49,8 @@ public class MySftpSessionListener implements SessionListener {
     @Override
     public void sessionClosed(Session session) {
         log.info("session closed, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteAddress(session));
-        SftpUser sftpUser = sftpStorage.removeCurrentUserInfo(SftpSessionUtils.getSessionId(session));
+        String sessionId = SftpSessionUtils.getSessionId(session);
+        SftpUser sftpUser = sftpStorage.removeCurrentUserInfo(sessionId);
         if (sftpUser != null) {
             try {
                 SftpOperationLogSaveReqDto reqDto = new SftpOperationLogSaveReqDto();
@@ -58,6 +59,7 @@ public class MySftpSessionListener implements SessionListener {
                 reqDto.setAction(SftpOperationLogAction.LOGOUT.name());
                 reqDto.setStatus(SftpOperationLogStatus.SUCCESS.name());
                 reqDto.setDescription("用户登出: " + sftpUser.getUsername());
+                reqDto.setSessionId(sessionId);
                 sftpOperationLogService.saveOperationLog(reqDto);
             } catch (Exception e) {
                 log.error("Failed to save logout log", e);

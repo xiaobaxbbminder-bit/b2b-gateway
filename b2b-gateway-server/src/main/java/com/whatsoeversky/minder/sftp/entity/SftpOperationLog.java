@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class SftpOperationLog {
     @Id
     private String id;
+    private String sessionId;
     private String filePath;
     private String username;
     private String clientAddress;

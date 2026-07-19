@@ -1,9 +1,9 @@
 package com.whatsoeversky.minder.sftp.service;
 
 import com.whatsoeversky.minder.sftp.dto.SftpUserCreateReqDto;
+import com.whatsoeversky.minder.sftp.dto.SftpUserOptionDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserRespDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserUpdateReqDto;
-import com.whatsoeversky.minder.sftp.dto.SftpUserOptionDto;
 import com.whatsoeversky.minder.sftp.entity.SftpTempKeypair;
 import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.mapper.SftpUserMapper;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -108,13 +107,6 @@ public class SftpUserService {
         sftpUserRepository.save(user);
     }
 
-    public Optional<SftpUser> findByUsername(String username) {
-        return sftpUserRepository.findByUsername(username);
-    }
-
-    public boolean verifyPassword(String rawPassword, String hashedPassword) {
-        return BCrypt.checkpw(rawPassword, hashedPassword);
-    }
 
     public void initAdminUser() {
         if (!sftpUserRepository.existsByUsername("admin")) {

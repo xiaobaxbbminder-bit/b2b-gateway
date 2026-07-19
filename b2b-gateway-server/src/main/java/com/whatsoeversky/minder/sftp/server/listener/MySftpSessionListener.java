@@ -36,6 +36,11 @@ public class MySftpSessionListener implements SessionListener {
     }
 
     @Override
+    public void sessionException(Session session, Throwable t) {
+        log.error("session exception, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteHostname(session), t);
+    }
+
+    @Override
     public void sessionClosed(Session session) {
         log.info("session closed, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteHostname(session));
         sftpStorage.removeCurrentUserInfo(SftpSessionUtils.getSessionId(session));

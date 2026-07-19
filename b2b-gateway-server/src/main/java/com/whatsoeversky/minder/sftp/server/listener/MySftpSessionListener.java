@@ -6,6 +6,7 @@ import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
 import com.whatsoeversky.minder.sftp.server.storage.SftpStorage;
 import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.sshd.common.session.Session;
 import org.apache.sshd.common.session.SessionListener;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
+@Slf4j
 public class MySftpSessionListener implements SessionListener {
     @Resource
     private SftpStorage sftpStorage;
@@ -21,7 +23,12 @@ public class MySftpSessionListener implements SessionListener {
 
     @Override
     public void sessionEvent(Session session, Event event) {
-        if (event == Event.Authenticated) {
+        if (event == Event.KexCompleted) {
+            log.info("kex completed, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteHostname(session));
+        } else if (event == Event.KeyEstablished) {
+            log.info("key established, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteHostname(session));
+        } else if (event == Event.Authenticated) {
+            log.info("authenticated, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteHostname(session));
             Optional<SftpUser> sftpUserOptional = sftpUserRepository.findByUsernameAndUserType(session.getUsername(), SftpUserTypeConstants.USER_TYPE_SERVER);
             SftpUser sftpUser = sftpUserOptional.orElseThrow(() -> new RuntimeException("error find user"));
             sftpStorage.setCurrentUserInfo(SftpSessionUtils.getSessionId(session), sftpUser);
@@ -30,6 +37,7 @@ public class MySftpSessionListener implements SessionListener {
 
     @Override
     public void sessionClosed(Session session) {
+        log.info("session closed, username: {}, remote hostname: {}", session.getUsername(), SftpSessionUtils.getRemoteHostname(session));
         sftpStorage.removeCurrentUserInfo(SftpSessionUtils.getSessionId(session));
     }
 }

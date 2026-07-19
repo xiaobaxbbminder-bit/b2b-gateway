@@ -79,6 +79,7 @@ public class SftpUserService {
         if (!"client".equals(userType)) {
             validatePublicKey(user.getPublicKey());
         }
+        user.setEnabled(Boolean.TRUE);
         user.setUpdatedAt(LocalDateTime.now());
         SftpUser updated = sftpUserRepository.save(user);
         return sftpUserMapper.toRespDto(updated);

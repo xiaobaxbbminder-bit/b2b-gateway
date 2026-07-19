@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/sftp',
   timeout: 10000
 })
 
@@ -26,28 +26,28 @@ api.interceptors.response.use(
 
 export const serviceApi = {
   list() {
-    return api.get('/sftp-services')
+    return api.get('/services')
   },
   get(id) {
-    return api.get(`/sftp-services/${id}`)
+    return api.get(`/services/${id}`)
   },
   create(data) {
-    return api.post('/sftp-services', data)
+    return api.post('/services', data)
   },
   update(id, data) {
-    return api.put(`/sftp-services/${id}`, data)
+    return api.put(`/services/${id}`, data)
   },
   delete(id) {
-    return api.delete(`/sftp-services/${id}`)
+    return api.delete(`/services/${id}`)
   },
   getUserOptions() {
-    return api.get('/sftp-users/options')
+    return api.get('/users/options')
   },
   getConfig(serviceId) {
-    return api.get(`/sftp-services/${serviceId}/config`)
+    return api.get(`/services/${serviceId}/config`)
   },
   updateConfig(serviceId, data) {
-    return api.put(`/sftp-services/${serviceId}/config`, data)
+    return api.put(`/services/${serviceId}/config`, data)
   }
 }
 

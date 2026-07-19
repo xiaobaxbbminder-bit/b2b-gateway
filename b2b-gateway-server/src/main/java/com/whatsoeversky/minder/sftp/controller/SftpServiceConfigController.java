@@ -8,18 +8,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/sftp")
 public class SftpServiceConfigController {
 
     @Autowired
     private SftpServiceConfigService sftpServiceConfigService;
 
-    @GetMapping("/sftp-services/{serviceId}/config")
+    @GetMapping("/services/{serviceId}/config")
     public Result<SftpServiceConfigRespDto> getConfig(@PathVariable String serviceId) {
         return Result.success(sftpServiceConfigService.getConfig(serviceId));
     }
 
-    @PutMapping("/sftp-services/{serviceId}/config")
+    @PutMapping("/services/{serviceId}/config")
     public Result<SftpServiceConfigRespDto> saveConfig(@PathVariable String serviceId, @RequestBody SftpServiceConfigReqDto dto) {
         return Result.success(sftpServiceConfigService.saveConfig(serviceId, dto));
     }

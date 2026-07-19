@@ -13,51 +13,51 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/sftp")
 public class SftpUserController {
 
     @Autowired
     private SftpUserService sftpUserService;
 
-    @GetMapping("/sftp-users")
+    @GetMapping("/users")
     public Result<List<SftpUserRespDto>> listUsers() {
         return Result.success(sftpUserService.findAllResp());
     }
 
-    @GetMapping("/sftp-users/{id}")
+    @GetMapping("/users/{id}")
     public Result<SftpUserRespDto> getUser(@PathVariable String id) {
         return Result.success(sftpUserService.getUser(id));
     }
 
-    @PostMapping("/sftp-users")
+    @PostMapping("/users")
     public Result<SftpUserRespDto> createUser(@RequestBody SftpUserCreateReqDto dto) {
         return Result.success(sftpUserService.createUser(dto));
     }
 
-    @PutMapping("/sftp-users/{id}")
+    @PutMapping("/users/{id}")
     public Result<SftpUserRespDto> updateUser(@PathVariable String id, @RequestBody SftpUserUpdateReqDto dto) {
         return Result.success(sftpUserService.updateUser(id, dto));
     }
 
-    @DeleteMapping("/sftp-users/{id}")
+    @DeleteMapping("/users/{id}")
     public Result<Void> deleteUser(@PathVariable String id) {
         sftpUserService.deleteUser(id);
         return Result.success();
     }
 
-    @PutMapping("/sftp-users/{id}/password")
+    @PutMapping("/users/{id}/password")
     public Result<Void> changePassword(@PathVariable String id, @RequestBody SftpPasswordChangeReqDto dto) {
         sftpUserService.changePassword(id, dto.getNewPassword());
         return Result.success();
     }
 
-    @PutMapping("/sftp-users/{id}/status")
+    @PutMapping("/users/{id}/status")
     public Result<Void> toggleStatus(@PathVariable String id) {
         sftpUserService.toggleStatus(id);
         return Result.success();
     }
 
-    @GetMapping("/sftp-users/options")
+    @GetMapping("/users/options")
     public Result<List<SftpUserOptionDto>> getUserOptions() {
         return Result.success(sftpUserService.getUserOptions());
     }

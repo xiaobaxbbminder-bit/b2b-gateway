@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/sftp/")
+@RequestMapping("/api/sftp/client")
 public class SftpClientController {
     @Resource
     private SftpClientService sftpApiService;

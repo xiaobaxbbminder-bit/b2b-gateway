@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,15 +39,21 @@ public class ApiCallPlugin implements Plugin {
         int readTimeout = arg.getReadTimeout();
         HttpUriRequestBase request = new HttpUriRequestBase(arg.getMethod().toUpperCase(), URI.create(arg.getUrl()));
         // 默认设置为json
-        request.setHeader("Content-Type", ContentType.APPLICATION_JSON.toString());
+        String contentType = ContentType.APPLICATION_JSON.getMimeType();
         for (Map.Entry<String, String> e : headerMap.entrySet()) {
-            request.setHeader(e.getKey(), expressionParser.parseExpression(e.getValue()));
+            String value = expressionParser.parseExpression(e.getValue());
+            if (e.getKey().equalsIgnoreCase(HttpHeaders.CONTENT_TYPE)) {
+                contentType = value;
+            } else {
+                request.setHeader(e.getKey(), value);
+            }
         }
+        request.setHeader(HttpHeaders.CONTENT_TYPE, contentType);
         if (StringUtils.hasLength(body)
                 && (HttpMethod.POST.name().equalsIgnoreCase(arg.getMethod())
                 || HttpMethod.PUT.name().equalsIgnoreCase(arg.getMethod())
                 || HttpMethod.PATCH.name().equalsIgnoreCase(arg.getMethod()))) {
-//            request.setEntity(new ByteArrayEntity());
+            request.setEntity(new ByteArrayEntity(body.getBytes(StandardCharsets.UTF_8), ContentType.create(contentType)));
         }
         try (CloseableHttpClient client = HttpClientUtils.createSingleUseHttpClient(connectTimeout, readTimeout)) {
             AtomicInteger statusRes = new AtomicInteger();

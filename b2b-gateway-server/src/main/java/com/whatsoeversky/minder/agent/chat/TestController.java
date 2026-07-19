@@ -1,12 +1,16 @@
 package com.whatsoeversky.minder.agent.chat;
 
 import com.alibaba.fastjson2.JSON;
+import com.whatsoeversky.minder.common.Result;
 import com.whatsoeversky.minder.helper.S3ClientHelper;
 import com.whatsoeversky.minder.helper.s3.*;
 import com.whatsoeversky.minder.sys.repository.SysUserRepository;
 import jakarta.annotation.Resource;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
@@ -19,6 +23,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -26,8 +31,10 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
 
 @RestController
 @Slf4j
@@ -161,6 +168,23 @@ public class TestController {
         Thread.sleep(8000);
         // response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         return "test2";
+    }
+
+    @PostMapping("/test/test-post")
+    public Result<String> testPost(HttpServletRequest request) throws IOException {
+        String requestURI = request.getRequestURI();
+        log.debug("request uri: {}", requestURI);
+        request.getParameterMap().forEach((key, value) -> {
+            log.info("request param, name: {}, value: {}", key, String.join(",", value));
+        });
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            log.info("request header, name: {}, value: {}", name, request.getHeader(name));
+        }
+        ServletInputStream inputStream = request.getInputStream();
+        log.info("body to string: {}", IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+        return Result.success("finish");
     }
 
     @GetMapping("/test3")

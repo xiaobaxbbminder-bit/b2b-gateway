@@ -220,7 +220,7 @@
                   <el-button size="small" @click="addHeader(plugin)">添加请求头</el-button>
                 </el-form-item>
                 <el-form-item label="请求体">
-                  <el-input v-model="plugin.args.body" type="textarea" :rows="4" placeholder='JSON格式，可用变量：{filename}, {filepath}, {filesize}, {timestamp}' />
+                  <el-input v-model="plugin.args.body" type="textarea" :rows="4" />
                 </el-form-item>
                 <el-form-item label="连接超时(毫秒)">
                   <el-input-number v-model="plugin.args.connectTimeout" :min="1000" :max="60000" :step="1000" style="width: 100%;" />

@@ -8,10 +8,34 @@
       </template>
 
       <el-table :data="logs" style="width: 100%" v-loading="loading">
-        <el-table-column prop="sessionId" label="会话ID" width="140" show-overflow-tooltip />
-        <el-table-column prop="username" label="用户名" width="120" show-overflow-tooltip />
-        <el-table-column prop="filePath" label="文件路径" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="action" label="操作类型" width="120" show-overflow-tooltip />
+        <el-table-column label="会话ID" width="140">
+          <template #default="{ row }">
+            <el-tooltip :content="row.sessionId" placement="top" :disabled="!row.sessionId">
+              <span class="text-ellipsis">{{ row.sessionId }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column label="用户名" width="120">
+          <template #default="{ row }">
+            <el-tooltip :content="row.username" placement="top" :disabled="!row.username">
+              <span class="text-ellipsis">{{ row.username }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column label="文件路径" min-width="200">
+          <template #default="{ row }">
+            <el-tooltip :content="row.filePath" placement="top" :disabled="!row.filePath">
+              <span class="text-ellipsis">{{ row.filePath }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作类型" width="120">
+          <template #default="{ row }">
+            <el-tooltip :content="row.action" placement="top" :disabled="!row.action">
+              <span class="text-ellipsis">{{ row.action }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="80">
           <template #default="{ row }">
             <el-tag size="small" :type="getStatusType(row.status)">
@@ -24,7 +48,13 @@
             {{ row.fileSize ? formatBytes(row.fileSize) : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="clientAddress" label="客户端地址" width="140" show-overflow-tooltip />
+        <el-table-column label="客户端地址" width="140">
+          <template #default="{ row }">
+            <el-tooltip :content="row.clientAddress" placement="top" :disabled="!row.clientAddress">
+              <span class="text-ellipsis">{{ row.clientAddress }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column label="开始时间" width="170">
           <template #default="{ row }">
             {{ formatTime(row.startTime) }}
@@ -168,5 +198,13 @@ onMounted(() => {
   padding: 0;
   width: 100%;
   box-sizing: border-box;
+}
+
+.text-ellipsis {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

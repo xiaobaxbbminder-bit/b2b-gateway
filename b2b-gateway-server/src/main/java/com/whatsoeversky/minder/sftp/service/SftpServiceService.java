@@ -6,6 +6,7 @@ import com.whatsoeversky.minder.sftp.dto.SftpServiceUpdateReqDto;
 import com.whatsoeversky.minder.sftp.entity.SftpService;
 import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.mapper.SftpServiceMapper;
+import com.whatsoeversky.minder.sftp.repository.SftpServiceConfigRepository;
 import com.whatsoeversky.minder.sftp.repository.SftpServiceRepository;
 import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class SftpServiceService {
 
     @Autowired
     private SftpServiceRepository sftpServiceRepository;
+
+    @Autowired
+    private SftpServiceConfigRepository sftpServiceConfigRepository;
 
     @Autowired
     private SftpUserRepository sftpUserRepository;
@@ -80,6 +84,7 @@ public class SftpServiceService {
             throw new RuntimeException("服务不存在: " + id);
         }
         sftpServiceRepository.deleteById(id);
+        sftpServiceConfigRepository.deleteAllByServiceId(id);
     }
 
     private SftpServiceRespDto toRespDtoWithUser(SftpService service) {

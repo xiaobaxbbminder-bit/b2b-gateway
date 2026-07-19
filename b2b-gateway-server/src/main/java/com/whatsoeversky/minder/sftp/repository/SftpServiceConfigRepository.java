@@ -12,5 +12,7 @@ public interface SftpServiceConfigRepository extends MongoRepository<SftpService
     boolean existsByServiceId(String serviceId);
 
     List<SftpServiceConfig> findByUserId(String userId);
+
+    void deleteAllByServiceId(String id);
 }
 

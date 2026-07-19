@@ -36,10 +36,10 @@
             </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="80">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag size="small" :type="getStatusType(row.status)">
-              {{ getStatusLabel(row.status) }}
+              {{ row.status }}
             </el-tag>
           </template>
         </el-table-column>
@@ -101,19 +101,12 @@ const pageNum = ref(1)
 const pageSize = ref(15)
 const total = ref(0)
 
-const statusLabels = {
-  SUCCESS: '成功',
-  ERROR: '失败',
-  PENDING: '处理中'
-}
-
-const getStatusLabel = (status) => statusLabels[status] || status
-
 const getStatusType = (status) => {
   const types = {
-    SUCCESS: 'success',
+    SUCCESS: 'info',
+    COMPLETED: 'success',
     ERROR: 'danger',
-    PENDING: 'warning'
+    PENDING: 'info'
   }
   return types[status] || 'info'
 }

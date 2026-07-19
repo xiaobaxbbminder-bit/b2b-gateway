@@ -60,7 +60,7 @@ public class MyPasswordAuthenticator implements PasswordAuthenticator {
         }
 
         log.info("Password authentication successful: {}", username);
-        saveAuthLog(sessionId, username, clientAddress, SftpOperationLogStatus.SUCCESS, "密码认证成功: " + username);
+        saveAuthLog(sessionId, username, clientAddress, SftpOperationLogStatus.COMPLETED, "密码认证成功: " + username);
         return true;
     }
 

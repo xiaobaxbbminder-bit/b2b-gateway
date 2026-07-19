@@ -18,14 +18,10 @@
       <div class="log-info" v-if="log">
         <el-descriptions :column="3" border>
           <el-descriptions-item label="用户名">{{ log.username }}</el-descriptions-item>
-          <el-descriptions-item label="操作类型">
-            <el-tag size="small" :type="getActionType(log.action)">
-              {{ getActionLabel(log.action) }}
-            </el-tag>
-          </el-descriptions-item>
+          <el-descriptions-item label="操作类型">{{ log.action }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag size="small" :type="log.status === 'SUCCESS' ? 'success' : (log.status === 'PENDING' ? 'warning' : 'danger')">
-              {{ log.status === 'SUCCESS' ? '成功' : (log.status === 'PENDING' ? '处理中' : '失败') }}
+            <el-tag size="small" :type="getStatusType(log.status)">
+              {{ log.status }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="文件路径" :span="3">
@@ -48,17 +44,15 @@
             {{ formatTime(row.logTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="120">
           <template #default="{ row }">
-            <el-tag size="small" :type="getActionType(row.action)">
-              {{ getActionLabel(row.action) }}
-            </el-tag>
+            <el-tag size="small">{{ row.action }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="80">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.status === 'SUCCESS' ? 'success' : (row.status === 'PENDING' ? 'warning' : 'danger')">
-              {{ row.status === 'SUCCESS' ? '成功' : (row.status === 'PENDING' ? '处理中' : '失败') }}
+            <el-tag size="small" :type="getStatusType(row.status)">
+              {{ row.status }}
             </el-tag>
           </template>
         </el-table-column>
@@ -101,31 +95,14 @@ const detailsLoading = ref(false)
 const log = ref(null)
 const details = ref([])
 
-const actionLabels = {
-  upload: '上传',
-  download: '下载',
-  delete: '删除',
-  rename: '重命名',
-  mkdir: '创建目录',
-  rmdir: '删除目录',
-  list: '列表',
-  stat: '状态'
-}
-
-const getActionLabel = (action) => actionLabels[action] || action
-
-const getActionType = (action) => {
+const getStatusType = (status) => {
   const types = {
-    upload: 'success',
-    download: 'primary',
-    delete: 'danger',
-    rename: 'warning',
-    mkdir: 'info',
-    rmdir: 'info',
-    list: 'info',
-    stat: 'info'
+    SUCCESS: 'info',
+    COMPLETED: 'success',
+    ERROR: 'danger',
+    PENDING: 'info'
   }
-  return types[action] || 'info'
+  return types[status] || 'info'
 }
 
 const formatBytes = (bytes) => {

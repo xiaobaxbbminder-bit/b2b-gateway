@@ -57,7 +57,7 @@ public class MyPublicKeyAuthenticator implements PublickeyAuthenticator {
             PublicKey expectedKey = SSHDKeyUtils.loadPublicKey(storedPublicKey.trim());
             if (expectedKey.equals(key)) {
                 log.info("Public key authentication successful: {}", username);
-                saveAuthLog(sessionId, username, clientAddress, SftpOperationLogStatus.SUCCESS, "公钥认证成功: " + username);
+                saveAuthLog(sessionId, username, clientAddress, SftpOperationLogStatus.COMPLETED, "公钥认证成功: " + username);
                 return true;
             }
         } catch (Exception e) {

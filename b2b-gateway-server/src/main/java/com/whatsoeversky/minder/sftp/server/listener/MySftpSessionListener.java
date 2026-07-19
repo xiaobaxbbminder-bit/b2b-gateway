@@ -57,7 +57,7 @@ public class MySftpSessionListener implements SessionListener {
                 reqDto.setUsername(sftpUser.getUsername());
                 reqDto.setClientAddress(SftpSessionUtils.getRemoteAddress(session));
                 reqDto.setAction(SftpOperationLogAction.LOGOUT.name());
-                reqDto.setStatus(SftpOperationLogStatus.SUCCESS.name());
+                reqDto.setStatus(SftpOperationLogStatus.COMPLETED.name());
                 reqDto.setDescription("用户登出: " + sftpUser.getUsername());
                 reqDto.setSessionId(sessionId);
                 sftpOperationLogService.saveOperationLog(reqDto);

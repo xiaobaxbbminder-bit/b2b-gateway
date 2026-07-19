@@ -33,7 +33,7 @@ public class SftpStorage {
         sessionUserInfo.put(sessionId, sftpUser);
     }
 
-    public void removeCurrentUserInfo(String sessionId) {
-        sessionUserInfo.remove(sessionId);
+    public SftpUser removeCurrentUserInfo(String sessionId) {
+        return sessionUserInfo.remove(sessionId);
     }
 }

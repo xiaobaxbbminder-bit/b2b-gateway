@@ -10,17 +10,11 @@
       <el-table :data="logs" style="width: 100%" v-loading="loading">
         <el-table-column prop="username" label="用户名" width="120" show-overflow-tooltip />
         <el-table-column prop="filePath" label="文件路径" min-width="200" show-overflow-tooltip />
-        <el-table-column label="操作类型" width="100">
-          <template #default="{ row }">
-            <el-tag size="small" :type="getActionType(row.action)">
-              {{ getActionLabel(row.action) }}
-            </el-tag>
-          </template>
-        </el-table-column>
+        <el-table-column prop="action" label="操作类型" width="120" show-overflow-tooltip />
         <el-table-column label="状态" width="80">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.status === 'success' ? 'success' : 'danger'">
-              {{ row.status === 'success' ? '成功' : '失败' }}
+            <el-tag size="small" :type="getStatusType(row.status)">
+              {{ getStatusLabel(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -76,31 +70,21 @@ const pageNum = ref(1)
 const pageSize = ref(15)
 const total = ref(0)
 
-const actionLabels = {
-  upload: '上传',
-  download: '下载',
-  delete: '删除',
-  rename: '重命名',
-  mkdir: '创建目录',
-  rmdir: '删除目录',
-  list: '列表',
-  stat: '状态'
+const statusLabels = {
+  SUCCESS: '成功',
+  ERROR: '失败',
+  PENDING: '处理中'
 }
 
-const getActionLabel = (action) => actionLabels[action] || action
+const getStatusLabel = (status) => statusLabels[status] || status
 
-const getActionType = (action) => {
+const getStatusType = (status) => {
   const types = {
-    upload: 'success',
-    download: 'primary',
-    delete: 'danger',
-    rename: 'warning',
-    mkdir: 'info',
-    rmdir: 'info',
-    list: 'info',
-    stat: 'info'
+    SUCCESS: 'success',
+    ERROR: 'danger',
+    PENDING: 'warning'
   }
-  return types[action] || 'info'
+  return types[status] || 'info'
 }
 
 const formatBytes = (bytes) => {

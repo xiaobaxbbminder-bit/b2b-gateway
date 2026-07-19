@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateKeypairRespDto {
-    private String id;
-    private String keyType;
-    private String publicKey;
+public class SftpPasswordChangeReqDto {
+    private String newPassword;
 }

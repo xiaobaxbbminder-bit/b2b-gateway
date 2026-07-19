@@ -1,6 +1,6 @@
 package com.whatsoeversky.minder.sftp.service;
 
-import com.whatsoeversky.minder.sftp.dto.GenerateKeypairRespDto;
+import com.whatsoeversky.minder.sftp.dto.SftpGenerateKeypairRespDto;
 import com.whatsoeversky.minder.sftp.entity.SftpTempKeypair;
 import com.whatsoeversky.minder.sftp.repository.SftpTempKeypairRepository;
 import com.whatsoeversky.minder.utils.MyKeyPair;
@@ -19,7 +19,7 @@ public class SftpTempKeypairService {
     @Autowired
     private SftpTempKeypairRepository sftpTempKeypairRepository;
 
-    public GenerateKeypairRespDto generateKeypair(String keyType) {
+    public SftpGenerateKeypairRespDto generateKeypair(String keyType) {
         if (keyType == null || !SUPPORTED_KEY_TYPES.contains(keyType.toUpperCase())) {
             throw new RuntimeException("不支持的密钥类型: " + keyType + "，可选值: RSA, ECDSA, ED25519");
         }
@@ -39,7 +39,7 @@ public class SftpTempKeypairService {
                 .build();
         SftpTempKeypair saved = sftpTempKeypairRepository.save(tempKeypair);
 
-        return GenerateKeypairRespDto.builder()
+        return SftpGenerateKeypairRespDto.builder()
                 .id(saved.getId())
                 .keyType(saved.getKeyType())
                 .publicKey(saved.getPublicKey())

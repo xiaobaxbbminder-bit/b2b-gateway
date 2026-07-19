@@ -19,7 +19,7 @@
           <el-input v-model="userForm.password" type="password" placeholder="请输入密码（可选）" show-password />
         </el-form-item>
         <el-form-item label="用户类型" prop="userType">
-          <el-select v-model="userForm.userType" placeholder="请选择用户类型" style="width: 100%;">
+          <el-select v-model="userForm.userType" :disabled="isEdit" placeholder="请选择用户类型" style="width: 100%;">
             <el-option label="服务端账号" value="server" />
             <el-option label="客户端账号" value="client" />
           </el-select>
@@ -42,6 +42,12 @@
 
         <!-- 服务端账号配置 -->
         <template v-if="userForm.userType === 'server'">
+          <el-form-item label="密码登录">
+            <el-select v-model="userForm.passwordLogin" style="width: 100%;">
+              <el-option label="启用" :value="true" />
+              <el-option label="禁用" :value="false" />
+            </el-select>
+          </el-form-item>
           <el-form-item label="服务权限">
             <el-select v-model="selectedPermissions" multiple placeholder="请选择权限" style="width: 100%;">
               <el-option label="读取文件" value="read" />
@@ -56,10 +62,6 @@
             <el-select v-model="userForm.filesystemType" placeholder="请选择文件系统" style="width: 100%;">
               <el-option v-for="opt in dictOptions.filesystem_type" :key="opt.key" :label="opt.value" :value="opt.key" />
             </el-select>
-          </el-form-item>
-          <el-form-item label="存储配额">
-            <el-input-number v-model="quotaMB" :min="0" :step="100" />
-            <span style="margin-left: 8px;">MB（0 = 不限）</span>
           </el-form-item>
         </template>
 
@@ -103,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
@@ -143,7 +145,7 @@ const userForm = reactive({
   keypairId: '',
   filesystemType: '',
   permissions: null,
-  quotaBytes: null,
+  passwordLogin: true,
   remoteHost: '',
   remotePort: 22,
   hostKeyAlgorithm: '',
@@ -153,8 +155,13 @@ const userForm = reactive({
 })
 
 const keyType = ref('RSA')
+
+watch(keyType, () => {
+  userForm.publicKey = ''
+  userForm.keypairId = ''
+})
+
 const selectedPermissions = ref([])
-const quotaMB = ref(0)
 
 const permissionLabels = {
   read: '读取文件',
@@ -191,7 +198,7 @@ const resetForm = () => {
   userForm.keypairId = ''
   userForm.filesystemType = ''
   userForm.permissions = null
-  userForm.quotaBytes = null
+  userForm.passwordLogin = true
   userForm.remoteHost = ''
   userForm.remotePort = 22
   userForm.hostKeyAlgorithm = ''
@@ -200,7 +207,6 @@ const resetForm = () => {
   userForm.encryptAlgorithm = ''
   keyType.value = 'RSA'
   selectedPermissions.value = []
-  quotaMB.value = 0
 }
 
 const goBack = () => {
@@ -240,12 +246,11 @@ const handleSubmit = async () => {
   try {
     const submitData = {
       username: userForm.username,
-      userType: userForm.userType,
       publicKey: userForm.publicKey,
       keypairId: userForm.keypairId,
       filesystemType: userForm.userType === 'server' ? userForm.filesystemType : null,
       permissions: userForm.userType === 'server' ? selectedToPermissions(selectedPermissions.value) : null,
-      quotaBytes: userForm.userType === 'server' && quotaMB.value > 0 ? quotaMB.value * 1024 * 1024 : null,
+      passwordLogin: userForm.userType === 'server' ? userForm.passwordLogin : null,
       remoteHost: userForm.userType === 'client' ? userForm.remoteHost : null,
       remotePort: userForm.userType === 'client' ? userForm.remotePort : null,
       hostKeyAlgorithm: userForm.userType === 'client' ? userForm.hostKeyAlgorithm : null,
@@ -265,6 +270,7 @@ const handleSubmit = async () => {
       if (userForm.password) {
         submitData.password = userForm.password
       }
+      submitData.userType = userForm.userType
       const { data } = await userApi.create(submitData)
       if (data.code !== 20000) {
         ElMessage.error(data.message || '创建失败')
@@ -299,7 +305,7 @@ onMounted(async () => {
       userForm.publicKey = user.publicKey || ''
       userForm.filesystemType = user.filesystemType || ''
       userForm.permissions = user.permissions
-      userForm.quotaBytes = user.quotaBytes
+      userForm.passwordLogin = user.passwordLogin != null ? user.passwordLogin : true
       userForm.remoteHost = user.remoteHost || ''
       userForm.remotePort = user.remotePort || 22
       userForm.hostKeyAlgorithm = user.hostKeyAlgorithm || ''
@@ -308,7 +314,6 @@ onMounted(async () => {
       userForm.encryptAlgorithm = user.encryptAlgorithm || ''
       keyType.value = user.keyType || 'RSA'
       selectedPermissions.value = permissionsToSelected(user.permissions)
-      quotaMB.value = user.quotaBytes ? Math.floor(user.quotaBytes / (1024 * 1024)) : 0
     } catch (error) {
       ElMessage.error('加载用户信息失败')
       router.push({ name: 'UserList' })

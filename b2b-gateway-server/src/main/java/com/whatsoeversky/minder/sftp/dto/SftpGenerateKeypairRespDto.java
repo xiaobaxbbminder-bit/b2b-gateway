@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserOptionDto {
+public class SftpGenerateKeypairRespDto {
     private String id;
-    private String username;
-    private String userType;
+    private String keyType;
+    private String publicKey;
 }

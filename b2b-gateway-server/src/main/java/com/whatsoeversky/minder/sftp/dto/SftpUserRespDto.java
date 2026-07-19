@@ -16,14 +16,13 @@ public class SftpUserRespDto {
     private String id;
     private String username;
     private Boolean enabled;
-    private Long usedBytes;
     private String userType;
     private String publicKey;
 
     // 服务端账号
     private String filesystemType;
     private SftpPermission permissions;
-    private Long quotaBytes;
+    private Boolean passwordLogin;
 
     // 客户端账号
     private String remoteHost;

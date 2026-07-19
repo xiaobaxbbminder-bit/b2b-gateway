@@ -1,6 +1,5 @@
 package com.whatsoeversky.minder.sftp.plugins;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
 import com.whatsoeversky.minder.utils.HttpClientUtils;
@@ -8,20 +7,20 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -38,75 +37,36 @@ public class ApiCallPlugin implements Plugin {
     @Override
     public void execute(FileRunContext context, String args) throws IOException {
         ApiCallArg arg = objectMapper.readValue(args, ApiCallArg.class);
-        if (arg.getUrl() == null || arg.getUrl().isEmpty()) {
-            throw new IOException("url is required");
+        FileRunContext.ExpressionParser expressionParser = context.getExpressionParser();
+        String body = expressionParser.parseExpression(arg.getBody());
+        Map<String, String> headerMap = arg.getHeaders();
+        int connectTimeout = arg.getConnectTimeout();
+        int readTimeout = arg.getReadTimeout();
+        HttpUriRequestBase request = new HttpUriRequestBase(arg.getMethod().toUpperCase(), URI.create(arg.getUrl()));
+        // 默认设置为json
+        request.setHeader("Content-Type", ContentType.APPLICATION_JSON.toString());
+        for (Map.Entry<String, String> e : headerMap.entrySet()) {
+            request.setHeader(e.getKey(), expressionParser.parseExpression(e.getValue()));
         }
-
-        String body = substituteVariables(arg.getBody(), context.getFile());
-        Map<String, String> headerMap = parseHeaders(arg.getHeaders());
-        int connectTimeout = arg.getConnectTimeout() != null ? arg.getConnectTimeout() : 5000;
-        int readTimeout = arg.getReadTimeout() != null ? arg.getReadTimeout() : 30000;
-
+        if (StringUtils.hasLength(body)
+                && (HttpMethod.POST.name().equalsIgnoreCase(arg.getMethod())
+                || HttpMethod.PUT.name().equalsIgnoreCase(arg.getMethod())
+                || HttpMethod.PATCH.name().equalsIgnoreCase(arg.getMethod()))) {
+//            request.setEntity(new ByteArrayEntity());
+        }
         try (CloseableHttpClient client = HttpClientUtils.createSingleUseHttpClient(connectTimeout, readTimeout)) {
-            HttpUriRequestBase request = new HttpUriRequestBase(
-                    arg.getMethod() != null ? arg.getMethod().toUpperCase() : "GET",
-                    URI.create(arg.getUrl()));
-
-            if (body != null && !body.isEmpty()
-                    && ("POST".equalsIgnoreCase(arg.getMethod()) || "PUT".equalsIgnoreCase(arg.getMethod()) || "PATCH".equalsIgnoreCase(arg.getMethod()))) {
-                request.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
-            }
-
-            for (Map.Entry<String, String> e : headerMap.entrySet()) {
-                request.setHeader(e.getKey(), e.getValue());
-            }
-
-            try (CloseableHttpResponse response = client.execute(request)) {
-                int statusCode = response.getCode();
-                String responseBody = "";
-                try {
-                    responseBody = response.getEntity() != null
-                            ? EntityUtils.toString(response.getEntity()) : "";
-                } catch (org.apache.hc.core5.http.ParseException e) {
-                    log.warn("failed to parse response body", e);
-                }
-
+            AtomicInteger statusRes = new AtomicInteger();
+            String response = client.execute(request, classicHttpResponse -> {
+                int statusCode = classicHttpResponse.getCode();
+                statusRes.set(statusCode);
                 log.info("api call done: {} {} -> {}", arg.getMethod(), arg.getUrl(), statusCode);
-
-                Map<String, Object> res = new HashMap<>();
-                res.put("statusCode", statusCode);
-                res.put("body", responseBody);
-                res.put("url", arg.getUrl());
-                context.putContextVariables(getPluginName(),
-                        FileRunContext.ContextVariable.builder().args(arg).res(res).build());
-            }
-        } catch (IOException e) {
-            log.error("api call failed: {} {}", arg.getMethod(), arg.getUrl(), e);
-            throw new IOException("api call failed: " + e.getMessage());
-        }
-    }
-
-    private String substituteVariables(String template, Path file) {
-        if (template == null || template.isEmpty()) return template;
-        String filename = file.getFileName().toString();
-        String filepath = file.toAbsolutePath().toString();
-        long filesize = 0;
-        try { filesize = Files.size(file); } catch (IOException ignored) {}
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        return template
-                .replace("{filename}", filename)
-                .replace("{filepath}", filepath)
-                .replace("{filesize}", String.valueOf(filesize))
-                .replace("{timestamp}", timestamp);
-    }
-
-    private Map<String, String> parseHeaders(String headersJson) {
-        if (headersJson == null || headersJson.isEmpty()) return Map.of();
-        try {
-            return objectMapper.readValue(headersJson, new TypeReference<Map<String, String>>() {});
-        } catch (Exception e) {
-            log.warn("failed to parse headers", e);
-            return Map.of();
+                return EntityUtils.toString(classicHttpResponse.getEntity());
+            });
+            Map<String, Object> res = new HashMap<>();
+            res.put("statusCode", statusRes.get());
+            res.put("body", response);
+            res.put("url", arg.getUrl());
+            context.putContextVariables(getPluginName(), FileRunContext.ContextVariable.builder().args(arg).res(res).build());
         }
     }
 }

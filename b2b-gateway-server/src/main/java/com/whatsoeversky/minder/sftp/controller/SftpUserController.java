@@ -1,11 +1,11 @@
 package com.whatsoeversky.minder.sftp.controller;
 
 import com.whatsoeversky.minder.common.Result;
-import com.whatsoeversky.minder.sftp.dto.PasswordChangeReqDto;
+import com.whatsoeversky.minder.sftp.dto.SftpPasswordChangeReqDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserCreateReqDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserRespDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserUpdateReqDto;
-import com.whatsoeversky.minder.sftp.dto.UserOptionDto;
+import com.whatsoeversky.minder.sftp.dto.SftpUserOptionDto;
 import com.whatsoeversky.minder.sftp.service.SftpUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +46,7 @@ public class SftpUserController {
     }
 
     @PutMapping("/sftp-users/{id}/password")
-    public Result<Void> changePassword(@PathVariable String id, @RequestBody PasswordChangeReqDto dto) {
+    public Result<Void> changePassword(@PathVariable String id, @RequestBody SftpPasswordChangeReqDto dto) {
         sftpUserService.changePassword(id, dto.getNewPassword());
         return Result.success();
     }
@@ -58,7 +58,7 @@ public class SftpUserController {
     }
 
     @GetMapping("/sftp-users/options")
-    public Result<List<UserOptionDto>> getUserOptions() {
+    public Result<List<SftpUserOptionDto>> getUserOptions() {
         return Result.success(sftpUserService.getUserOptions());
     }
 }

@@ -13,13 +13,12 @@ import lombok.NoArgsConstructor;
 public class SftpUserUpdateReqDto {
     private String username;
     private Boolean enabled;
-    private String userType;
     private String publicKey;
     private String keypairId;
 
     private String filesystemType;
     private SftpPermission permissions;
-    private Long quotaBytes;
+    private Boolean passwordLogin;
 
     private String remoteHost;
     private Integer remotePort;

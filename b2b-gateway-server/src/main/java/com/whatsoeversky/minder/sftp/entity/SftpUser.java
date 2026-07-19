@@ -20,7 +20,6 @@ public class SftpUser {
     private String username;
     private String password;
     private Boolean enabled;
-    private Long usedBytes;
     private String userType;
     private String publicKey;
     private String privateKey;
@@ -31,8 +30,8 @@ public class SftpUser {
     // 服务端账号：服务权限
     private SftpPermission permissions;
 
-    // 服务端账号：存储配额
-    private Long quotaBytes;
+    // 服务端账号：密码登录
+    private Boolean passwordLogin;
 
     // 客户端账号：远程服务器连接信息
     private String remoteHost;

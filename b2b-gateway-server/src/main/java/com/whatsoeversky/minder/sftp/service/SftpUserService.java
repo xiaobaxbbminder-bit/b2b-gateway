@@ -3,7 +3,7 @@ package com.whatsoeversky.minder.sftp.service;
 import com.whatsoeversky.minder.sftp.dto.SftpUserCreateReqDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserRespDto;
 import com.whatsoeversky.minder.sftp.dto.SftpUserUpdateReqDto;
-import com.whatsoeversky.minder.sftp.dto.UserOptionDto;
+import com.whatsoeversky.minder.sftp.dto.SftpUserOptionDto;
 import com.whatsoeversky.minder.sftp.entity.SftpTempKeypair;
 import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.mapper.SftpUserMapper;
@@ -37,9 +37,9 @@ public class SftpUserService {
                 .collect(Collectors.toList());
     }
 
-    public List<UserOptionDto> getUserOptions() {
+    public List<SftpUserOptionDto> getUserOptions() {
         return sftpUserRepository.findAll().stream()
-                .map(user -> UserOptionDto.builder()
+                .map(user -> SftpUserOptionDto.builder()
                         .id(user.getId())
                         .username(user.getUsername())
                         .userType(user.getUserType())
@@ -64,7 +64,6 @@ public class SftpUserService {
         }
         user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
         user.setEnabled(true);
-        user.setUsedBytes(0L);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         SftpUser created = sftpUserRepository.save(user);
@@ -74,9 +73,10 @@ public class SftpUserService {
     public SftpUserRespDto updateUser(String id, SftpUserUpdateReqDto dto) {
         SftpUser user = sftpUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
+        String userType = user.getUserType();
         sftpUserMapper.updateEntity(dto, user);
-        resolveKeypair(dto.getUserType(), dto.getKeypairId(), user);
-        if (!"client".equals(user.getUserType())) {
+        resolveKeypair(userType, dto.getKeypairId(), user);
+        if (!"client".equals(userType)) {
             validatePublicKey(user.getPublicKey());
         }
         user.setUpdatedAt(LocalDateTime.now());
@@ -121,7 +121,6 @@ public class SftpUserService {
                     .username("admin")
                     .password(BCrypt.hashpw("123456", BCrypt.gensalt()))
                     .enabled(true)
-                    .usedBytes(0L)
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();

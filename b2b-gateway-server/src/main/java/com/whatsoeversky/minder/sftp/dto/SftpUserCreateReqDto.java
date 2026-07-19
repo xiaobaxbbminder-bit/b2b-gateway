@@ -21,7 +21,7 @@ public class SftpUserCreateReqDto {
     // 服务端账号
     private String filesystemType;
     private SftpPermission permissions;
-    private Long quotaBytes;
+    private Boolean passwordLogin;
 
     // 客户端账号
     private String remoteHost;

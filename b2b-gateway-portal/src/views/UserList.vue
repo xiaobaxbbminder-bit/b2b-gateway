@@ -57,7 +57,7 @@
     </el-card>
 
     <!-- 修改密码对话框 -->
-    <el-dialog v-model="passwordDialogVisible" title="修改密码" width="400px">
+    <el-dialog v-model="passwordDialogVisible" title="修改密码" width="60%">
       <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
         <el-form-item label="新密码" prop="newPassword">
           <el-input v-model="passwordForm.newPassword" type="password" show-password placeholder="请输入新密码" />

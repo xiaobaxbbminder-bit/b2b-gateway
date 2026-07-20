@@ -16,4 +16,5 @@ public class SftpPermission {
     private boolean createFolder;
     private boolean deleteFolder;
     private boolean rename;
+    private boolean listDir;
 }

@@ -56,6 +56,7 @@
               <el-option label="创建文件夹" value="createFolder" />
               <el-option label="删除文件夹" value="deleteFolder" />
               <el-option label="重命名" value="rename" />
+              <el-option label="列出目录" value="listDir" />
             </el-select>
           </el-form-item>
           <el-form-item label="文件系统">
@@ -169,7 +170,8 @@ const permissionLabels = {
   deleteFile: '删除文件',
   createFolder: '创建文件夹',
   deleteFolder: '删除文件夹',
-  rename: '重命名'
+  rename: '重命名',
+  listDir: '列出目录'
 }
 
 const userRules = {
@@ -178,7 +180,7 @@ const userRules = {
 }
 
 const selectedToPermissions = (selected) => {
-  const permissions = { read: false, write: false, deleteFile: false, createFolder: false, deleteFolder: false, rename: false }
+  const permissions = { read: false, write: false, deleteFile: false, createFolder: false, deleteFolder: false, rename: false, listDir: false }
   if (selected && Array.isArray(selected)) {
     selected.forEach(key => { permissions[key] = true })
   }

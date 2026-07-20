@@ -101,11 +101,21 @@ public class MySftpEventListener implements SftpEventListener {
     }
 
     @Override
+    public void removing(ServerSession session, Path path, boolean isDirectory) throws IOException {
+        removeHandler.removing(session, path, isDirectory);
+    }
+
+    @Override
     public void removed(ServerSession session,
                         Path path,
                         boolean isDirectory,
                         Throwable thrown) throws IOException {
         removeHandler.removed(session, path, isDirectory, thrown);
+    }
+
+    @Override
+    public void creating(ServerSession session, Path path, Map<String, ?> attrs) throws IOException {
+        createHandler.creating(session, path, attrs);
     }
 
     @Override

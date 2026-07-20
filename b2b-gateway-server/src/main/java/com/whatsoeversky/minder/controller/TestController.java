@@ -1,4 +1,4 @@
-package com.whatsoeversky.minder.agent.chat;
+package com.whatsoeversky.minder.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.whatsoeversky.minder.common.Result;

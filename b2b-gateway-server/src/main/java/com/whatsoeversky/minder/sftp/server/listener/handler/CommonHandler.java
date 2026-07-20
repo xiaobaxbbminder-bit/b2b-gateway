@@ -17,11 +17,13 @@ public class CommonHandler {
     @Resource
     private SftpOperationLogService sftpOperationLogService;
 
+
     protected String saveOperationLog(ServerSession session,
                                       String action,
                                       String filePath,
                                       Long fileSize,
-                                      String description) {
+                                      String description,
+                                      SftpOperationLogStatus status) {
         String clientAddress = SftpSessionUtils.getClientAddress(session);
         String username = session.getUsername();
         SftpOperationLogSaveReqDto reqDto = new SftpOperationLogSaveReqDto();
@@ -32,6 +34,7 @@ public class CommonHandler {
         reqDto.setAction(action);
         reqDto.setDescription(description);
         reqDto.setSessionId(SftpSessionUtils.getSessionId(session));
+        reqDto.setStatus(status.name());
         return sftpOperationLogService.saveOperationLog(reqDto);
     }
 

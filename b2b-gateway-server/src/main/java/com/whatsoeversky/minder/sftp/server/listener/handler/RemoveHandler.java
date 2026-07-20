@@ -3,6 +3,7 @@ package com.whatsoeversky.minder.sftp.server.listener.handler;
 import com.whatsoeversky.minder.sftp.entity.SftpPermission;
 import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.enums.SftpOperationLogAction;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogStatus;
 import com.whatsoeversky.minder.sftp.server.storage.SftpStorage;
 import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
 import jakarta.annotation.Resource;
@@ -44,11 +45,19 @@ public class RemoveHandler extends CommonHandler {
         String action = isDirectory ? SftpOperationLogAction.REMOVE_DIRECTORY.name() : SftpOperationLogAction.DELETE_FILE.name();
         String type = isDirectory ? "删除文件夹" : "删除文件";
         if (thrown != null) {
-            saveOperationLog(session, action, filePath, 0L,
-                    String.format(Locale.ROOT, "%s失败: %s %s", type, filePath, thrown.getMessage()));
+            saveOperationLog(session,
+                    action,
+                    filePath,
+                    0L,
+                    String.format(Locale.ROOT, "%s失败: %s %s", type, filePath, thrown.getMessage()),
+                    SftpOperationLogStatus.ERROR);
         } else {
-            saveOperationLog(session, action, filePath, 0L,
-                    String.format(Locale.ROOT, "%s成功: %s", type, filePath));
+            saveOperationLog(session,
+                    action,
+                    filePath,
+                    0L,
+                    String.format(Locale.ROOT, "%s成功: %s", type, filePath),
+                    SftpOperationLogStatus.COMPLETED);
         }
     }
 }

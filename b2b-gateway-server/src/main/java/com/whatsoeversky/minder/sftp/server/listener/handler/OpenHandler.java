@@ -3,6 +3,7 @@ package com.whatsoeversky.minder.sftp.server.listener.handler;
 import com.whatsoeversky.minder.sftp.entity.SftpPermission;
 import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.enums.SftpOperationLogAction;
+import com.whatsoeversky.minder.sftp.enums.SftpOperationLogStatus;
 import com.whatsoeversky.minder.sftp.server.storage.SftpStorage;
 import com.whatsoeversky.minder.sftp.server.utils.SftpSessionUtils;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
@@ -53,7 +54,12 @@ public class OpenHandler extends CommonHandler {
                 throw new IOException("Permission denied: read file");
             }
             String description = String.format(Locale.ROOT, "文件：%s 正在下载", filePath);
-            String logId = saveOperationLog(session, SftpOperationLogAction.READ_FILE.name(), filePath, FileUtils.getFileSize(file), description);
+            String logId = saveOperationLog(session,
+                    SftpOperationLogAction.READ_FILE.name(),
+                    filePath,
+                    FileUtils.getFileSize(file),
+                    description,
+                    SftpOperationLogStatus.PENDING);
             saveRunContext(remoteHandle, file, logId);
         } else {
             if (permissions != null && !permissions.isWrite()) {
@@ -61,7 +67,12 @@ public class OpenHandler extends CommonHandler {
                 throw new IOException("Permission denied: write file");
             }
             String description = String.format(Locale.ROOT, "文件：%s 正在上传", filePath);
-            String logId = saveOperationLog(session, SftpOperationLogAction.WRITE_FILE.name(), filePath, 0L, description);
+            String logId = saveOperationLog(session,
+                    SftpOperationLogAction.WRITE_FILE.name(),
+                    filePath,
+                    0L,
+                    description,
+                    SftpOperationLogStatus.PENDING);
             saveRunContext(remoteHandle, file, logId);
         }
     }

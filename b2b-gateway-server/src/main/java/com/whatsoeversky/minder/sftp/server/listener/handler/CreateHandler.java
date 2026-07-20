@@ -22,7 +22,7 @@ public class CreateHandler extends CommonHandler {
     @Resource
     private SftpStorage sftpStorage;
 
-    public void creating(ServerSession session, Path path, Map<String,?> attrs) throws IOException {
+    public void creating(ServerSession session, Path path, Map<String, ?> attrs) throws IOException {
         SftpUser user = sftpStorage.getCurrentUserInfo(SftpSessionUtils.getSessionId(session));
         SftpPermission permissions = user != null ? user.getPermissions() : null;
         if (permissions != null && !permissions.isCreateFolder()) {
@@ -37,11 +37,19 @@ public class CreateHandler extends CommonHandler {
                         Throwable thrown) throws IOException {
         String filePath = path.toString();
         if (thrown != null) {
-            saveOperationLog(session, SftpOperationLogAction.CREATE_DIRECTORY.name(), filePath, 0L,
-                    String.format(Locale.ROOT, "创建文件夹失败: %s %s", filePath, thrown.getMessage()));
+            saveOperationLog(session,
+                    SftpOperationLogAction.CREATE_DIRECTORY.name(),
+                    filePath,
+                    0L,
+                    String.format(Locale.ROOT, "创建文件夹失败: %s %s", filePath, thrown.getMessage()),
+                    SftpOperationLogStatus.ERROR);
         } else {
-            saveOperationLog(session, SftpOperationLogAction.CREATE_DIRECTORY.name(), filePath, 0L,
-                    String.format(Locale.ROOT, "创建文件夹成功: %s", filePath));
+            saveOperationLog(session,
+                    SftpOperationLogAction.CREATE_DIRECTORY.name(),
+                    filePath,
+                    0L,
+                    String.format(Locale.ROOT, "创建文件夹成功: %s", filePath),
+                    SftpOperationLogStatus.COMPLETED);
         }
     }
 

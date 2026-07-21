@@ -7,6 +7,8 @@ import com.whatsoeversky.minder.sftp.client.dto.SftpApiBatchReqDto;
 import com.whatsoeversky.minder.sftp.entity.SftpServiceConfig;
 import com.whatsoeversky.minder.sftp.support.FileMetadata;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
+import com.whatsoeversky.minder.utils.AesUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -17,6 +19,8 @@ import java.util.Vector;
 
 @Component
 public class SftpDataSourceHandler implements DataSourceHandler {
+    @Value("${sftp.aes-key}")
+    private String aesKey;
 
     @Override
     public String getType() {
@@ -25,7 +29,7 @@ public class SftpDataSourceHandler implements DataSourceHandler {
 
     @Override
     public Flux<FileMetadata> retrieveFileMetadataStream(SftpApiBatchReqDto reqDto,
-                                                         SftpServiceConfig sftpServiceConfig) {
+                                                          SftpServiceConfig sftpServiceConfig) {
         return Flux.create(sink -> {
             Session session = null;
             ChannelSftp channel = null;
@@ -36,16 +40,8 @@ public class SftpDataSourceHandler implements DataSourceHandler {
                 channel.connect();
 
                 String remotePath = (String) args.getOrDefault("remotePath", "/");
-                Vector<ChannelSftp.LsEntry> entries = channel.ls(remotePath);
-                for (ChannelSftp.LsEntry entry : entries) {
-                    String filename = entry.getFilename();
-                    if (filename.equals(".") || filename.equals("..")) continue;
-                    if (entry.getAttrs().isDir()) continue;
-                    sink.next(FileMetadata.builder()
-                            .fileName(filename)
-                            .fileSize(entry.getAttrs().getSize())
-                            .build());
-                }
+                boolean recursive = Boolean.TRUE.equals(reqDto.getRecursive());
+                listFiles(channel, remotePath, "", recursive, sink);
                 sink.complete();
             } catch (Exception e) {
                 sink.error(e);
@@ -54,6 +50,31 @@ public class SftpDataSourceHandler implements DataSourceHandler {
                 if (session != null) session.disconnect();
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void listFiles(ChannelSftp channel, String basePath, String relativeDir, boolean recursive,
+                           reactor.core.publisher.FluxSink<FileMetadata> sink) throws Exception {
+        String dir = relativeDir.isEmpty() ? basePath : basePath + "/" + relativeDir;
+        Vector<ChannelSftp.LsEntry> entries = channel.ls(dir);
+        for (ChannelSftp.LsEntry entry : entries) {
+            String filename = entry.getFilename();
+            if (filename.equals(".") || filename.equals("..")) continue;
+
+            String relativePath = relativeDir.isEmpty() ? filename : relativeDir + "/" + filename;
+            if (entry.getAttrs().isDir()) {
+                if (recursive) {
+                    listFiles(channel, basePath, relativePath, true, sink);
+                }
+                continue;
+            }
+            sink.next(FileMetadata.builder()
+                    .fileName(filename)
+                    .fileSize(entry.getAttrs().getSize())
+                    .lastModified(entry.getAttrs().getMTime() * 1000L)
+                    .relativePath(relativePath)
+                    .build());
+        }
     }
 
     @Override
@@ -69,13 +90,14 @@ public class SftpDataSourceHandler implements DataSourceHandler {
             channel.connect();
 
             Path tempFile = Files.createTempFile("sftp-", fileMetaData.getFileName());
-            String remoteFile = remotePath.endsWith("/") ? remotePath + fileMetaData.getFileName() : remotePath + "/" + fileMetaData.getFileName();
+            String remoteFile = remotePath.endsWith("/") ? remotePath + fileMetaData.getRelativePath()
+                    : remotePath + "/" + fileMetaData.getRelativePath();
             try (var out = Files.newOutputStream(tempFile)) {
                 channel.get(remoteFile, out);
             }
             fileRunContext.setFile(tempFile);
         } catch (Exception e) {
-            throw new RuntimeException("SFTP download failed: " + fileMetaData.getFileName(), e);
+            throw new RuntimeException("SFTP download failed: " + fileMetaData.getRelativePath(), e);
         } finally {
             if (channel != null) channel.disconnect();
             if (session != null) session.disconnect();
@@ -92,14 +114,50 @@ public class SftpDataSourceHandler implements DataSourceHandler {
             channel = (ChannelSftp) session.openChannel("sftp");
             channel.connect();
 
-            try (var in = Files.newInputStream(fileRunContext.getFile())) {
-                channel.put(in, fileMetaData.getFileName());
+            String targetPath = (String) args.getOrDefault("remotePath", "/");
+            String relativePath = fileMetaData.getRelativePath();
+            if (relativePath != null && !relativePath.isEmpty()) {
+                String fullDir = targetPath;
+                int lastSlash = relativePath.lastIndexOf('/');
+                if (lastSlash > 0) {
+                    String subDirs = relativePath.substring(0, lastSlash);
+                    fullDir = targetPath.endsWith("/") ? targetPath + subDirs : targetPath + "/" + subDirs;
+                    mkdirs(channel, fullDir);
+                }
+                String uploadPath = targetPath.endsWith("/") ? targetPath + relativePath : targetPath + "/" + relativePath;
+                try (var in = Files.newInputStream(fileRunContext.getFile())) {
+                    channel.put(in, uploadPath);
+                }
+            } else {
+                String uploadPath = targetPath.endsWith("/") ? targetPath + fileMetaData.getFileName()
+                        : targetPath + "/" + fileMetaData.getFileName();
+                try (var in = Files.newInputStream(fileRunContext.getFile())) {
+                    channel.put(in, uploadPath);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException("SFTP upload failed: " + fileMetaData.getFileName(), e);
         } finally {
             if (channel != null) channel.disconnect();
             if (session != null) session.disconnect();
+        }
+    }
+
+    private void mkdirs(ChannelSftp channel, String path) {
+        try {
+            String[] dirs = path.split("/");
+            StringBuilder current = new StringBuilder();
+            for (String dir : dirs) {
+                if (dir.isEmpty()) continue;
+                current.append("/").append(dir);
+                try {
+                    channel.ls(current.toString());
+                } catch (Exception e) {
+                    channel.mkdir(current.toString());
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create directory: " + path, e);
         }
     }
 
@@ -118,7 +176,7 @@ public class SftpDataSourceHandler implements DataSourceHandler {
 
         Session session = jsch.getSession(username, host, port);
         if (password != null && !password.isEmpty()) {
-            session.setPassword(password);
+            session.setPassword(AesUtil.decrypt(password, aesKey));
         }
         session.setConfig("StrictHostKeyChecking", "no");
         session.connect();

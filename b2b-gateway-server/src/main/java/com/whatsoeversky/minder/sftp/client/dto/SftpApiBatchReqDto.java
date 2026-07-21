@@ -8,4 +8,5 @@ public class SftpApiBatchReqDto {
     private String filename;
     private String startTime;
     private String endTime;
+    private Boolean recursive;
 }

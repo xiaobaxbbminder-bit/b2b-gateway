@@ -9,9 +9,11 @@ import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.mapper.SftpUserMapper;
 import com.whatsoeversky.minder.sftp.repository.SftpTempKeypairRepository;
 import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
+import com.whatsoeversky.minder.utils.AesUtil;
 import com.whatsoeversky.minder.utils.SSHDKeyUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,6 +31,9 @@ public class SftpUserService {
 
     @Autowired
     private SftpTempKeypairRepository sftpTempKeypairRepository;
+
+    @Value("${sftp.aes-key}")
+    private String aesKey;
 
     public List<SftpUserRespDto> findAllResp() {
         return sftpUserRepository.findAll().stream()
@@ -61,7 +66,7 @@ public class SftpUserService {
         if (!"client".equals(user.getUserType())) {
             validatePublicKey(user.getPublicKey());
         }
-        user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        user.setPassword(encryptPassword(user.getUserType(), user.getPassword()));
         user.setEnabled(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
@@ -94,7 +99,7 @@ public class SftpUserService {
     public void changePassword(String id, String newPassword) {
         SftpUser user = sftpUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        user.setPassword(encryptPassword(user.getUserType(), newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         sftpUserRepository.save(user);
     }
@@ -119,6 +124,34 @@ public class SftpUserService {
                     .build();
             sftpUserRepository.save(admin);
         }
+    }
+
+    private String encryptPassword(String userType, String rawPassword) {
+        if (rawPassword == null || rawPassword.isBlank()) {
+            return rawPassword;
+        }
+        if ("client".equals(userType)) {
+            try {
+                return AesUtil.encrypt(rawPassword, aesKey);
+            } catch (Exception e) {
+                throw new RuntimeException("AES加密密码失败", e);
+            }
+        }
+        return BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+    }
+
+    public String decryptPassword(SftpUser user) {
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            return null;
+        }
+        if ("client".equals(user.getUserType())) {
+            try {
+                return AesUtil.decrypt(user.getPassword(), aesKey);
+            } catch (Exception e) {
+                throw new RuntimeException("AES解密密码失败", e);
+            }
+        }
+        return user.getPassword();
     }
 
     private void resolveKeypair(String userType, String keypairId, SftpUser user) {

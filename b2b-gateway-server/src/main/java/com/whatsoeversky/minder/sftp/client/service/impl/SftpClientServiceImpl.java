@@ -10,12 +10,15 @@ import com.whatsoeversky.minder.sftp.entity.SftpUser;
 import com.whatsoeversky.minder.sftp.repository.SftpServiceConfigRepository;
 import com.whatsoeversky.minder.sftp.repository.SftpUserRepository;
 import com.whatsoeversky.minder.sftp.service.SftpServiceService;
+import com.whatsoeversky.minder.sftp.support.FileMetadata;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.nio.file.Files;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,6 +63,7 @@ public class SftpClientServiceImpl implements SftpClientService {
         Map<String, Object> uploadTargetArgs = buildPartnerSftpArgs(partnerUser);
 
         handler.retrieveFileMetadataStream(reqDto, config)
+                .filter(metadata -> isInTimeRange(metadata, reqDto))
                 .flatMap(metadata -> {
                     FileRunContext ctx = new FileRunContext();
                     ctx.getContextVariables().put("dataSourceArgs", dataSourceArgs);
@@ -87,6 +91,32 @@ public class SftpClientServiceImpl implements SftpClientService {
     private void cleanup(FileRunContext ctx) {
         if (ctx.getFile() != null) {
             try { Files.deleteIfExists(ctx.getFile()); } catch (Exception ignored) {}
+        }
+    }
+
+    private boolean isInTimeRange(FileMetadata metadata, SftpApiBatchReqDto reqDto) {
+        if (!StringUtils.hasLength(reqDto.getStartTime()) && !StringUtils.hasLength(reqDto.getEndTime())) {
+            return true;
+        }
+        if (metadata.getLastModified() == null) {
+            return true;
+        }
+        try {
+            if (StringUtils.hasLength(reqDto.getStartTime())) {
+                long startMillis = Instant.parse(reqDto.getStartTime()).toEpochMilli();
+                if (metadata.getLastModified() < startMillis) {
+                    return false;
+                }
+            }
+            if (StringUtils.hasLength(reqDto.getEndTime())) {
+                long endMillis = Instant.parse(reqDto.getEndTime()).toEpochMilli();
+                if (metadata.getLastModified() > endMillis) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return true;
         }
     }
 
@@ -123,6 +153,7 @@ public class SftpClientServiceImpl implements SftpClientService {
                 .build();
 
         sftpHandler.retrieveFileMetadataStream(reqDto, partnerConfig)
+                .filter(metadata -> isInTimeRange(metadata, reqDto))
                 .flatMap(metadata -> {
                     FileRunContext ctx = new FileRunContext();
                     ctx.getContextVariables().put("dataSourceArgs", partnerSftpArgs);

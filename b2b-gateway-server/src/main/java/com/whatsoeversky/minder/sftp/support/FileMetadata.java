@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class FileMetadata {
     private String fileName;
     private Long fileSize;
+    private Long lastModified;
 }

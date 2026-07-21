@@ -7,6 +7,8 @@ import com.whatsoeversky.minder.sftp.client.dto.SftpApiBatchReqDto;
 import com.whatsoeversky.minder.sftp.entity.SftpServiceConfig;
 import com.whatsoeversky.minder.sftp.support.FileMetadata;
 import com.whatsoeversky.minder.sftp.support.FileRunContext;
+import com.whatsoeversky.minder.utils.AesUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -17,6 +19,8 @@ import java.util.Vector;
 
 @Component
 public class SftpDataSourceHandler implements DataSourceHandler {
+    @Value("${sftp.aes-key}")
+    private String aesKey;
 
     @Override
     public String getType() {
@@ -44,6 +48,7 @@ public class SftpDataSourceHandler implements DataSourceHandler {
                     sink.next(FileMetadata.builder()
                             .fileName(filename)
                             .fileSize(entry.getAttrs().getSize())
+                            .lastModified(entry.getAttrs().getMTime() * 1000L)
                             .build());
                 }
                 sink.complete();
@@ -118,7 +123,7 @@ public class SftpDataSourceHandler implements DataSourceHandler {
 
         Session session = jsch.getSession(username, host, port);
         if (password != null && !password.isEmpty()) {
-            session.setPassword(password);
+            session.setPassword(AesUtil.decrypt(password,aesKey));
         }
         session.setConfig("StrictHostKeyChecking", "no");
         session.connect();

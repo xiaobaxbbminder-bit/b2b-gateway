@@ -51,6 +51,7 @@ public class S3DataSourceHandler implements DataSourceHandler {
                     sink.next(FileMetadata.builder()
                             .fileName(item.getKey())
                             .fileSize(item.getSize())
+                            .lastModified(item.getLastModifiedInstant() != null ? item.getLastModifiedInstant().toEpochMilli() : null)
                             .build());
                 }
                 sink.complete();

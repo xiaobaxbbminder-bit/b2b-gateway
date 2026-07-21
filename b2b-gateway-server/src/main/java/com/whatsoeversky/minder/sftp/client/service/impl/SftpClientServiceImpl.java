@@ -88,6 +88,48 @@ public class SftpClientServiceImpl implements SftpClientService {
                 .blockLast();
     }
 
+    private Map<String, Object> buildPartnerSftpArgs(SftpUser user) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("remoteHost", user.getRemoteHost());
+        args.put("remotePort", user.getRemotePort());
+        args.put("username", user.getUsername());
+        args.put("password", user.getPassword());
+        args.put("privateKey", user.getPrivateKey());
+        return args;
+    }
+
+    private void cleanup(FileRunContext ctx) {
+        if (ctx.getFile() != null) {
+            try { Files.deleteIfExists(ctx.getFile()); } catch (Exception ignored) {}
+        }
+    }
+
+    private boolean isInTimeRange(FileMetadata metadata, SftpApiBatchReqDto reqDto) {
+        if (!StringUtils.hasLength(reqDto.getStartTime()) && !StringUtils.hasLength(reqDto.getEndTime())) {
+            return true;
+        }
+        if (metadata.getLastModified() == null) {
+            return true;
+        }
+        try {
+            if (StringUtils.hasLength(reqDto.getStartTime())) {
+                long startMillis = Instant.parse(reqDto.getStartTime()).toEpochMilli();
+                if (metadata.getLastModified() < startMillis) {
+                    return false;
+                }
+            }
+            if (StringUtils.hasLength(reqDto.getEndTime())) {
+                long endMillis = Instant.parse(reqDto.getEndTime()).toEpochMilli();
+                if (metadata.getLastModified() > endMillis) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
     @Override
     public void uploadBatch(SftpApiBatchReqDto reqDto) {
         SftpServiceConfig config = sftpServiceConfigRepository.findByServiceId(reqDto.getServiceId())
@@ -117,6 +159,7 @@ public class SftpClientServiceImpl implements SftpClientService {
         Map<String, Object> partnerSftpArgs = buildPartnerSftpArgs(partnerUser);
 
         sourceHandler.retrieveFileMetadataStream(reqDto, config)
+                .filter(metadata -> isInTimeRange(metadata, reqDto))
                 .filter(metadata -> isInTimeRange(metadata, reqDto))
                 .flatMap(metadata -> {
                     FileRunContext ctx = new FileRunContext();

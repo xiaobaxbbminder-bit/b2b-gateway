@@ -14,4 +14,5 @@ public class FileMetadata {
     private Long fileSize;
     private Long lastModified;
     private String relativePath;
+    private Long lastModified;
 }

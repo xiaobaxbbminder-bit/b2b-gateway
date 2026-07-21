@@ -49,8 +49,59 @@ public class SftpClientServiceImpl implements SftpClientService {
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
         SftpServiceConfig.DataSource ds = config.getDataSource();
-        DataSourceHandler handler = dataSourceSelector.getDataSourceHandler(ds.getType());
-        if (handler == null) {
+        DataSourceHandler targetHandler = dataSourceSelector.getDataSourceHandler(ds.getType());
+        if (targetHandler == null) {
+            throw new RuntimeException("不支持的目标数据源类型: " + ds.getType());
+        }
+
+        DataSourceHandler sftpHandler = dataSourceSelector.getDataSourceHandler("SFTP");
+        if (sftpHandler == null) {
+            throw new RuntimeException("SFTP 处理器不存在");
+        }
+
+        Map<String, Object> targetArgs = new HashMap<>(ds.getArgs());
+        Map<String, Object> partnerSftpArgs = buildPartnerSftpArgs(partnerUser);
+        if (StringUtils.hasLength(reqDto.getFilename())) {
+            partnerSftpArgs.put("sourcePrefix", reqDto.getFilename());
+        }
+
+        SftpServiceConfig partnerConfig = SftpServiceConfig.builder()
+                .dataSource(SftpServiceConfig.DataSource.builder()
+                        .type("SFTP")
+                        .args(partnerSftpArgs)
+                        .build())
+                .build();
+
+        sftpHandler.retrieveFileMetadataStream(reqDto, partnerConfig)
+                .filter(metadata -> isInTimeRange(metadata, reqDto))
+                .flatMap(metadata -> {
+                    FileRunContext ctx = new FileRunContext();
+                    ctx.getContextVariables().put("dataSourceArgs", partnerSftpArgs);
+                    sftpHandler.processDownload(ctx, metadata);
+
+                    ctx.getContextVariables().put("uploadTargetArgs", targetArgs);
+                    targetHandler.processUpload(ctx, metadata);
+
+                    cleanup(ctx);
+                    return Mono.just(metadata);
+                })
+                .blockLast();
+    }
+
+    @Override
+    public void uploadBatch(SftpApiBatchReqDto reqDto) {
+        SftpServiceConfig config = sftpServiceConfigRepository.findByServiceId(reqDto.getServiceId())
+                .orElseThrow(() -> new RuntimeException("服务配置不存在"));
+
+        SftpService service = sftpServiceService.findById(reqDto.getServiceId())
+                .orElseThrow(() -> new RuntimeException("服务不存在"));
+
+        SftpUser partnerUser = sftpUserRepository.findById(service.getUserId())
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        SftpServiceConfig.DataSource ds = config.getDataSource();
+        DataSourceHandler sourceHandler = dataSourceSelector.getDataSourceHandler(ds.getType());
+        if (sourceHandler == null) {
             throw new RuntimeException("不支持的数据源类型: " + ds.getType());
         }
 
@@ -63,16 +114,16 @@ public class SftpClientServiceImpl implements SftpClientService {
         if (StringUtils.hasLength(reqDto.getFilename())) {
             dataSourceArgs.put("sourcePrefix", reqDto.getFilename());
         }
-        Map<String, Object> uploadTargetArgs = buildPartnerSftpArgs(partnerUser);
+        Map<String, Object> partnerSftpArgs = buildPartnerSftpArgs(partnerUser);
 
-        handler.retrieveFileMetadataStream(reqDto, config)
+        sourceHandler.retrieveFileMetadataStream(reqDto, config)
                 .filter(metadata -> isInTimeRange(metadata, reqDto))
                 .flatMap(metadata -> {
                     FileRunContext ctx = new FileRunContext();
                     ctx.getContextVariables().put("dataSourceArgs", dataSourceArgs);
-                    handler.processDownload(ctx, metadata);
+                    sourceHandler.processDownload(ctx, metadata);
 
-                    ctx.getContextVariables().put("uploadTargetArgs", uploadTargetArgs);
+                    ctx.getContextVariables().put("uploadTargetArgs", partnerSftpArgs);
                     sftpHandler.processUpload(ctx, metadata);
 
                     cleanup(ctx);
@@ -121,56 +172,5 @@ public class SftpClientServiceImpl implements SftpClientService {
         } catch (Exception e) {
             return true;
         }
-    }
-
-    @Override
-    public void uploadBatch(SftpApiBatchReqDto reqDto) {
-        SftpServiceConfig config = sftpServiceConfigRepository.findByServiceId(reqDto.getServiceId())
-                .orElseThrow(() -> new RuntimeException("服务配置不存在"));
-
-        SftpService service = sftpServiceService.findById(reqDto.getServiceId())
-                .orElseThrow(() -> new RuntimeException("服务不存在"));
-
-        SftpUser partnerUser = sftpUserRepository.findById(service.getUserId())
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
-
-        SftpServiceConfig.DataSource ds = config.getDataSource();
-        DataSourceHandler targetHandler = dataSourceSelector.getDataSourceHandler(ds.getType());
-        if (targetHandler == null) {
-            throw new RuntimeException("不支持的目标数据源类型: " + ds.getType());
-        }
-
-        DataSourceHandler sftpHandler = dataSourceSelector.getDataSourceHandler("SFTP");
-        if (sftpHandler == null) {
-            throw new RuntimeException("SFTP 处理器不存在");
-        }
-
-        Map<String, Object> dataSourceArgs = new HashMap<>(ds.getArgs());
-        Map<String, Object> partnerSftpArgs = buildPartnerSftpArgs(partnerUser);
-        if (StringUtils.hasLength(reqDto.getFilename())) {
-            partnerSftpArgs.put("sourcePrefix", reqDto.getFilename());
-        }
-
-        SftpServiceConfig partnerConfig = SftpServiceConfig.builder()
-                .dataSource(SftpServiceConfig.DataSource.builder()
-                        .type("SFTP")
-                        .args(partnerSftpArgs)
-                        .build())
-                .build();
-
-        sftpHandler.retrieveFileMetadataStream(reqDto, partnerConfig)
-                .filter(metadata -> isInTimeRange(metadata, reqDto))
-                .flatMap(metadata -> {
-                    FileRunContext ctx = new FileRunContext();
-                    ctx.getContextVariables().put("dataSourceArgs", partnerSftpArgs);
-                    sftpHandler.processDownload(ctx, metadata);
-
-                    ctx.getContextVariables().put("uploadTargetArgs", dataSourceArgs);
-                    targetHandler.processUpload(ctx, metadata);
-
-                    cleanup(ctx);
-                    return Mono.just(metadata);
-                })
-                .blockLast();
     }
 }
